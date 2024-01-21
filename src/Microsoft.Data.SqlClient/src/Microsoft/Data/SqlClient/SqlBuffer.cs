@@ -383,6 +383,7 @@ namespace Microsoft.Data.SqlClient
                 }
                 else if (StorageType.SqlGuid == _type)
                 {
+                    // BUG introduced by PR #2306
                     return _value._guid;
                 }
                 return (Guid)Value;
@@ -811,6 +812,7 @@ namespace Microsoft.Data.SqlClient
             {
                 if (StorageType.Guid == _type)
                 {
+                    // this potentially could return a wrong data, because class allows to set null Guid value via call .SetToNullOfType(SqlBuffer.StorageType.Guid)
                     return IsNull ? SqlGuid.Null : new SqlGuid(_value._guid);
                 }
                 else if (StorageType.SqlGuid == _type)
@@ -985,6 +987,8 @@ namespace Microsoft.Data.SqlClient
                             return data.ToSqlXml();
                         }
 
+                    // bug was introduced by PR #2306
+                    // Codecoverage has an issue: Codecov showed that the line was covered, but, I guess, it was covered for another case: StorageType.SqlBinary
                     case StorageType.SqlGuid:
                         return SqlGuid;
 
