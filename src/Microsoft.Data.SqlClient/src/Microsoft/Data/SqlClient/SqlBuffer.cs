@@ -383,7 +383,7 @@ namespace Microsoft.Data.SqlClient
                 }
                 else if (StorageType.SqlGuid == _type)
                 {
-                    return ((SqlGuid)_object).Value;
+                    return _value._guid;
                 }
                 return (Guid)Value;
             }
@@ -972,6 +972,8 @@ namespace Microsoft.Data.SqlClient
                         return SqlSingle;
                     case StorageType.String:
                         return SqlString;
+                    case StorageType.SqlBinary:
+                        return _object;
 
                     case StorageType.SqlCachedBuffer:
                         {
@@ -983,9 +985,8 @@ namespace Microsoft.Data.SqlClient
                             return data.ToSqlXml();
                         }
 
-                    case StorageType.SqlBinary:
                     case StorageType.SqlGuid:
-                        return _object;
+                        return SqlGuid;
 
                     case StorageType.SqlXml:
                         if (_isNull)
