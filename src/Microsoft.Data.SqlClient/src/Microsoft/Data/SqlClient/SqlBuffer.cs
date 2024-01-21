@@ -96,6 +96,10 @@ namespace Microsoft.Data.SqlClient
             internal long _int64;     // also used to store Money, UtcDateTime, Date , and Time
             [FieldOffset(0)]
             internal Guid _guid;
+#if NET8_0_OR_GREATER
+            [FieldOffset(0)]
+            internal SqlGuid _sqlGuid;
+#endif
             [FieldOffset(0)]
             internal float _single;
             [FieldOffset(0)]
@@ -109,6 +113,9 @@ namespace Microsoft.Data.SqlClient
         private bool _isNull;
         private StorageType _type;
         private Storage _value;
+#if !NET8_0_OR_GREATER
+        private SqlGuid _sqlGuid;
+#endif
         private object _object;    // String, SqlBinary, SqlCachedBuffer, SqlString, SqlXml
 
         internal SqlBuffer()
@@ -383,7 +390,11 @@ namespace Microsoft.Data.SqlClient
                 }
                 else if (StorageType.SqlGuid == _type)
                 {
-                    return _value._guid;
+#if NET8_0_OR_GREATER
+                    return _value._sqlGuid.Value;
+#else
+                    return _sqlGuid.Value;
+#endif
                 }
                 return (Guid)Value;
             }
@@ -815,17 +826,26 @@ namespace Microsoft.Data.SqlClient
                 }
                 else if (StorageType.SqlGuid == _type)
                 {
-                    return IsNull ? SqlGuid.Null : new SqlGuid(_value._guid);
+                    if (IsNull)
+                    {
+                        return SqlGuid.Null;
+                    }
+#if NET8_0_OR_GREATER
+                    return _value._sqlGuid;
+#else
+                    return _sqlGuid;
+#endif
                 }
                 return (SqlGuid)SqlValue; // anything else we haven't thought of goes through boxing.
             }
             set
             {
                 Debug.Assert(IsEmpty, "setting value a second time?");
-                if (!value.IsNull)
-                {
-                    _value._guid = value.Value;
-                }
+#if NET8_0_OR_GREATER
+                _value._sqlGuid = value;
+#else
+                _sqlGuid = value;
+#endif
                 _type = StorageType.SqlGuid;
                 _isNull = value.IsNull;
             }
